@@ -1,12 +1,13 @@
 import detect from './detector';
 
+import getInlineOption from './getInlineOption';
 /**
  * Adds multiple classes on node
  * @param {DOMNode} node
  * @param {array}  classes
  */
 const addClasses = (node, classes) =>
-  classes && classes.forEach(className => node.classList.add(className));
+classes && classes.forEach(className => node.classList.add(className));
 
 /**
  * Removes multiple classes from node
@@ -14,21 +15,21 @@ const addClasses = (node, classes) =>
  * @param {array}  classes
  */
 const removeClasses = (node, classes) =>
-  classes && classes.forEach(className => node.classList.remove(className));
+classes && classes.forEach(className => node.classList.remove(className));
 
 const fireEvent = (eventName, data) => {
-  let customEvent;
+    let customEvent;
 
-  if (detect.ie11()) {
-    customEvent = document.createEvent('CustomEvent');
-    customEvent.initCustomEvent(eventName, true, true, { detail: data });
-  } else {
-    customEvent = new CustomEvent(eventName, {
-      detail: data
-    });
-  }
+    if (detect.ie11()) {
+        customEvent = document.createEvent('CustomEvent');
+        customEvent.initCustomEvent(eventName, true, true, {detail: data});
+    } else {
+        customEvent = new CustomEvent(eventName, {
+            detail: data
+        });
+    }
 
-  return document.dispatchEvent(customEvent);
+    return document.dispatchEvent(customEvent);
 };
 
 /**
@@ -37,41 +38,56 @@ const fireEvent = (eventName, data) => {
  * @param {int}  top        scrolled distance
  */
 const applyClasses = (el, top) => {
-  const { options, position, node, data } = el;
+    const {options, position, node, data} = el;
 
-  const hide = () => {
-    if (!el.animated) return;
+    const hide = () => {
+        if (!el.animated) {
+            return;
+        }
 
-    removeClasses(node, options.animatedClassNames);
-    fireEvent('aos:out', node);
+        removeClasses(node, options.animatedClassNames);
+        fireEvent('aos:out', node);
 
-    if (el.options.id) {
-      fireEvent(`aos:in:${el.options.id}`, node);
+        if (el.options.id) {
+            fireEvent(`aos:in:${el.options.id}`, node);
+        }
+
+        el.animated = false;
+    };
+
+    const show = () => {
+        if (el.animated) {
+            return;
+        }
+
+        addClasses(node, options.animatedClassNames);
+
+        fireEvent('aos:in', node);
+        if (el.options.id) {
+            fireEvent(`aos:in:${el.options.id}`, node);
+        }
+
+        el.animated = true;
+    };
+
+    if (options.mirror && top >= position.out && !options.once) {
+        hide();
+    } else if (top >= position.in) {
+        const anchorEnd = getInlineOption(el.node, 'anchor-end');
+
+        console.log(el)
+        if (!anchorEnd) {
+            show();
+        } else {
+            show();
+
+            if (top >= position.out) {
+                hide();
+            }
+        }
+    } else if (el.animated && !options.once) {
+        hide();
     }
-
-    el.animated = false;
-  };
-
-  const show = () => {
-    if (el.animated) return;
-
-    addClasses(node, options.animatedClassNames);
-
-    fireEvent('aos:in', node);
-    if (el.options.id) {
-      fireEvent(`aos:in:${el.options.id}`, node);
-    }
-
-    el.animated = true;
-  };
-
-  if (options.mirror && top >= position.out && !options.once) {
-    hide();
-  } else if (top >= position.in) {
-    show();
-  } else if (el.animated && !options.once) {
-    hide();
-  }
 };
 
 /**
@@ -81,6 +97,6 @@ const applyClasses = (el, top) => {
  * @return {void}
  */
 const handleScroll = $elements =>
-  $elements.forEach((el, i) => applyClasses(el, window.pageYOffset));
+    $elements.forEach((el, i) => applyClasses(el, window.pageYOffset));
 
 export default handleScroll;
