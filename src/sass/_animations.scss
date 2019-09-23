@@ -1,8 +1,9 @@
 // Animations variables
 $aos-distance: 100px !default;
 
+
 @media screen {
-  html:not(.no-js) {
+  html:not(.no-js-break-the-aos) {
     /**
     * Fade animations:
     * fade
@@ -51,8 +52,6 @@ $aos-distance: 100px !default;
     [data-aos='fade-down-left'] {
       transform: translate3d($aos-distance, -$aos-distance, 0);
     }
-
-
 
 
     /**
